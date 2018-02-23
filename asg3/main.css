@@ -1,0 +1,59 @@
+* {
+	font-family: 'Open Sans', sans-serif;
+	text-align: center;
+	background-color: #F5F5F5;
+}
+
+.container {
+	display: block;
+	margin: auto;
+	width: 100%;
+	max-width: 1000px;
+}
+
+section {
+	display: block;
+	margin: auto;
+	width: 90%;
+	max-width: 700px;
+}
+
+p {
+	text-align: justify;
+}
+
+a {
+	color: #337ab7;
+	text-decoration: none;
+	transition: 0.5s;
+}
+
+a:hover {
+	color: #23527c;
+	text-decoration: none;
+	transition: 0.5s;
+}
+
+h1 {
+	font-size: 3em;
+}
+
+h3 {
+	font-size: 2em;
+}
+
+h4 {
+	font-size: 1.5em;
+}
+
+.nav {
+	list-style-type: none;
+	padding: 0;
+}
+
+img {
+	width: 100%;
+	height: auto;
+	margin-top: 1em;
+	mix-blend-mode: multiply;
+}
