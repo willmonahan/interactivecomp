@@ -1,0 +1,73 @@
+<DOCTYPE! html>
+
+<html>
+	<head>
+		<title>Midterm Project - Interactive Computing - Will Monahan</title>
+		<link rel="stylesheet" type="text/css" href="main.css">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+	</head>
+	<body>
+		<div class="container">
+			<h1>Will Monahan</h1>
+			<h3>Interactive Computing</h3>
+			<h4>Midterm Project</h4>
+
+			<br>
+
+			<iframe src="game.html" width="354" height="600" id="game"></iframe>
+
+			<br>
+
+			<h4>Intro</h4>
+			<p>&emsp;Embedded above is the final playable version of my midterm game! Click and drag with your mouse to play. For a significantly more enjoyable playing experience, you can play the game in a larger window <a href="game.html">here</a>! This game is based partially on the webgame <a href="https://www.crazygames.com/assets/99-balls/index.html">99 Balls</a>, and partially on the mobile game <a href="https://play.google.com/store/apps/details?id=com.ketchapp.ballz&hl=en">Ballz</a>.</p>
+			<p>&emsp;Below, I've written a bit about my thought process throughout the development of this game, as well as insight into the problems I encountered and the solutions I devised along the way. I decided that I didn't want to include any videos or images below, because the game is really easy to pick up. I feel like the best way to understand my game and what I describe below is to just play it. If you'd like to try playing the game at a higher level, you can click <a href="#game" onclick="window.frames[0].cheat(150)">here</a> to automatically bump up the score in the game above. Enjoy!</p>
+
+			<h4>Basics</h4>
+			<p>&emsp;To start, I knew what the basic building blocks of my game would need to be. I started by making a list of important elements that I would need to incorporate into the final game to make it feel complete:</p>
+			<ul>
+				<li><a href="#blocks">a block class which would populate the field of blocks onscreen and dictate their behavior</a></li>
+				<li><a href="#balls">a ball class that would dictate the behavior of the shooting balls individually</a></li>
+				<li><a href="#collisions">collision detection, which would allow the balls to bounce accurately off the blocks</a></li>
+				<li><a href="#aiming">an aiming mechanism, which allows the user to click and drag to intuitively and precisely aim (this slingshot-like aiming mechanism was the biggest thing that I took from 99 Balls)</a></li>
+				<li><a href="#shooting">a method for shooting the balls sequentially instead of all at once, and a "lightning mode" to speed up the gameplay (the waits become long as the score climbs above ~150)</a></li>
+				<li><a href="#details">many tweaks and small details which go largely unnoticed by players, but make the game smooth and fun.</a></li>
+			</ul>
+			<p>&emsp;Each one of the list items above is elaborated on in a written section below. You can click on the list item to navigate to that section.</p>
+
+			<h4 id="blocks">Blocks</h4>
+			<p>&emsp;The Block is the fundamental building block of this game. The very first thing I did was map out the layout of the screen. I decided to work with blocks that were 125 pixels by 125 pixels. The blocks would appear in 7 rows of 7, which one empty space above and one empty space below. This means that the playable area of the screen is 7 blocks wide by 9 blocks high, or 875px by 1125px. I wanted a row at the top to display the score, and a larger space at the bottom. The top area is 1 row tall, the bottom is 2 rows tall. The entire screen is divided into these rows, and 125 is always the magic number.</p>
+			<p>&emsp;Each block has a variable to store its own size, as well as the width of its "border". For aesthetic reasons, I decided to not have the blocks actually touch, and instead each block has a border of 5px on each side, meaning each block is 10px away from each of its neighbors. The hitboxes for the blocks do not include these borders. Because each side was bordered by 5px but the blocks were 10px apart, I added 5 pixels to each side so that the side gutters looked even. All in all, the canvas is 885px wide and 1500px tall in total.</p>
+			<p>&emsp;The main function of the game draws each ball sequentially each frame, and that's about it. The blocks contain the main code for collision detection, but all of the heavy lifting is really done by the Ball class. Each block contains its position, size, and value, and that's basically it. If the value is above zero, it draws itself with a certain fill color (see <a href="#details">details</a>). If the value is zero, it doesn't draw itself at all. If the value is -1, that means it's a "bonus", and it just draws the bonus icon (basically just a fancy ellipse)</p>
+
+			<h4 id="balls">Balls</h4>
+			<p>&emsp;The Ball class is far more complex than the Block class. Each ball stores a number of values: it's x and y position, its size (this never actually changes, but I used this so I could debug), its state (is it sitting or shooting right now?), and its speed. Each ball stores its speed in both X and Y dimensions, which is passed to it at the beginning of each turn. Every frame, every ball is asked to both draw itself and calculate its movement (not really, there are optimizations to prevent redundant drawing/calcuation).</p>
+			<p>&emsp;As the ball moves, every single ball is constantly cycling through every single block, and using my <a href="collisions">collision detection algorithm</a> to see if it needs to bounce off the block. When it does, it reverses its X and Y speeds accordingly.</p>
+			<p>&emsp;In cases where the ball hits a bonus block, the game remembers that at the end of the turn, a new ball will be added to the player's arsenal. This is important, because if the ball were to be added immediately, it could be shot during that turn, instead of the next.</p>
+
+			<h4 id="collisions">Collisions</h4>
+			<p>&emsp;Collision detection was a huge hurdle, and one that I really struggled to deal with. I wrote a four or five collision detection algorithms based on ideas I had either come up with myself or read online, but the one I include in the current version of the game works best.</p>
+			<p>&emsp;The basic mechanic is that each frame, the ball checks to see which blocks are within a certain radius (that radius us just wider than the radius required to intersect the ball and the block). If the block is within that radius, the ball calls the collision detection function within that block. This function uses the ball's X and Y speeds to predict the position of the ball in the next frame, and checks to see if it will be colliding with the block. From there, it returns a value.</p>
+			<p>&emsp;If there is a collision and the block's value is -1, the block knows that it should add a bonus ball, and revert to state 0. If the ball is on the same vertical plane as the block, it must be bouncing in the X direction (left-right). If the inverse is true, it must be bouncing in the Y direction (up-down). Using this knowledge, it returns either "x" or "y" to instruct the ball on how to react.</p>
+			<p>&emsp;Where collision detection essentially breaks down is at intersections. The first problem I noticed was that if a ball hit the gap between 2 blocks, it would often bounce back completely, instead of just deflecting off of it. To fix this, I wrote a variable (thanks Craig!) to ensure that the ball never bounced in more than one direction during a single frame. However, this gave rise to another issue where if a ball approached an L-shaped corner, it would deflect off one ball and actually travel through the neighboring block, which is very very bad. To fix this, I wrote what turned out to be a surprisingly difficult series of if/else statements which checked the value of neighboring blocks, to determine if the ball MAY need to bounce off another block in that frame (that's not even asking if it WILL bounce during that frame).</p>
+
+			<h4 id="aiming">Aiming</h4>
+			<p>&emsp;To aim, I wanted to use a slingshot-like mechanic where the user would click and drag, pulling back to shoot the balls. To do this, I implemented a block of code to run for as long as the mouse was down: it would track the distance in both X and Y between the mouse's position and where it started dragging, and calculate an angle value. From there, I could use that angle value to do a number of things.</p>
+			<p>&emsp;The main thing that I do with that value is break out each ball's total speed into X and Y values. This ensures that the balls always travel at a constant total speed, but the X and Y values are proportioned in such a way that they aim the ball as the user intended.</p>
+			<p>&emsp;I also use it to draw an aiming line. To prevent the game from seeming TOO easy, I use a "map" function from p5 to ensure that the aiming line never exceeds a certain length. I also made the stylistic choice in the last few days to change the aiming guide from a line to a series of balls, more like the aiming guide in the mobile game Ballz. To be clear, the ellipses on the aiming guide are NOT the same size as the balls in the game, nor are they intended to be. They're just supposed to be a guide. They're spaced out along the line calculated using the angle function above. I think it looks way better than the plain old aiming line.</p>
+
+			<h4 id="shooting">Shooting & Lightning Mode</h4>
+			<p>&emsp;This was one of the more complicated aspects of the game, believe it or not. To shoot the balls, I had to have a delay timer (to sequence the balls) which would wait a certain number of frames before launching the next ball. I also used global variables to track how many balls had been shot that turn, as well as how many balls had landed so far that turn. Basically, if the number of balls shot was greater than the number of balls landed, then the turn was ongoing.</p>
+			<p>&emsp;Lightning mode was a feature which seemed really necessary, and took a lot of tweaking to get right, but is pretty simple in theory. As long as the balls are shooting (ballsShot > ballsLanded) then I increment a counter. If the balls have been shooting for more than 5 seconds, then I give the user the option to activate lightning mode. To make lightning mode work, I just use another counter to calculate the movement of the balls many times each frame before drawing them, instead of my usual move-draw-move-draw cadence. This gives the illusion that the balls are moving faster, even though I'm just letting the computer do more work in one frame than usual. Easy peasy!</p>
+
+			<h4 id="details">Details</h4>
+			<p>&emsp;Finally, the thing that really brought the game together in my mind is the small tweaks and details that I created to have a more enjoyable player experience. Most of these details were things that I had planned to add from the beginning, and so I had deliberately left myself the option to implement them in my code from the start, but other details required me to restructure some core parts of the game. Here are just a few of many details:</p>
+			<ul>
+				<li>The blocks change color based on a 4-color spectrum. I do this my mapping the R, G, and B values of multiple colors to create transitions. The blocks are yellow at value 0, red at value 15, blue at value 30, and green at value 60 and above. I spent a lot of time tweaking these colors and these numbers to make them just right. I originally had the colors map not to actual values, but to portions of the blocks original value (eg blue at 100%, red at 50% depleted, etc) but I found this to be less intuitive to the player. By using objective values, the player can glance at the colors on the screen and understand the values of the blocks they see.</li>
+				<li>As balls land, if they're not the first ball to land, they travel along the bottom of the screen to their new starting position. This took a lot of trial and error, because it forced me to add a third state for the balls besides "flying" and "idle". Luckily, the actual movement wasn't too difficult; it just took time to get the speed right, and to make sure the balls didn't fly in the wrong direction, or past their target point.</li>
+				<li>The game saves your highscore as a cookie! This way, if you exit the game and come back a day later, your highscore will still be saved. I got the code to do this from <a href="https://www.w3schools.com/js/js_cookies.asp">this page on w3Schools</a> and made minor tweaks to get it to work.</li>
+			</ul>
+
+			<h4>Thanks for playing!</h4>
+		</div>
+	</body>
+</html>
