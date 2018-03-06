@@ -192,6 +192,8 @@ function mousePressed() { //called whenever the mouse is pressed
 				moles[i].y = 120+200*(parseInt(i/3));
 			}
 			countdown = 60*30; //resets countdown
+			hits = 0;
+			misses = 0;
 		}
 		else {
 			basso.play();
