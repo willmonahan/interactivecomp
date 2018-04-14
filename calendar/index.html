@@ -1,3 +1,5 @@
+---
+---
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -18,11 +20,7 @@
 
 		<div id="pagemain" class="container">
 			
-      <div class="row" id="nav-row">
-        <script type="text/javascript">
-          $("#nav-row").load("https://wmonahan.com/include/navbar.html");
-        </script>
-      </div>
+      {% include navbar.html %}
 
 			<h2 class="text-center">Tutoring Availability</h2>
 
@@ -40,11 +38,7 @@
 			
 		</div><!--Container End-->
 
-    <footer class="footer row mx-0">
-      <script type="text/javascript">
-        $(".footer").load("https://wmonahan.com/include/footer.html");
-      </script>
-    </footer>
+    {% include footer.html %}
 
 		<!-- Optional JavaScript -->
     <!-- Popper.js, then Bootstrap JS -->
